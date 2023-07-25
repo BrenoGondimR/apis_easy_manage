@@ -18,10 +18,10 @@ var (
 )
 
 var (
-	DB = connectDB()
+	DB = ConnectDB()
 )
 
-func connectDB() *mongo.Database {
+func ConnectDB() *mongo.Database {
 
 	err := godotenv.Load()
 	if err != nil {
