@@ -32,3 +32,16 @@ func CreateFuncionario(c *gin.Context) {
 	// Retorne uma resposta de sucesso ao front-end.
 	c.JSON(201, gin.H{"message": "Funcionário criado com sucesso", "funcionario": funcionario})
 }
+
+func GetAllFuncionarios(c *gin.Context) {
+	funcionarioModel := models.Funcionario{}
+
+	funcionarios, err := funcionarioModel.FindAll(utils.DB)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Erro ao buscar funcionários"})
+		return
+	}
+
+	// Retorna os funcionários encontrados para o front-end
+	c.JSON(200, gin.H{"data": funcionarios})
+}

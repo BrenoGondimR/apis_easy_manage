@@ -42,3 +42,21 @@ func (f *Funcionario) InsertFuncionario(db *mongo.Database) error {
 	}
 	return nil
 }
+
+// FindAll consulta todos os funcionários na coleção "funcionarios"
+func (f *Funcionario) FindAll(db *mongo.Database) ([]Funcionario, error) {
+	var result []Funcionario
+	collection := db.Collection("funcionarios")
+
+	//TODO Depois aplicar filtros
+	cursor, err := collection.Find(context.Background(), bson.D{})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.Background())
+	if err = cursor.All(context.Background(), &result); err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
