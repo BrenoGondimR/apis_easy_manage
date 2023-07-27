@@ -23,3 +23,16 @@ func CreateTratamento(c *gin.Context) {
 	// Retorne uma resposta de sucesso ao front-end.
 	c.JSON(201, gin.H{"message": "Tratamento criado com sucesso", "tratamento": tratamento})
 }
+
+func GetAllTratamentos(c *gin.Context) {
+	tratamentoModel := models.Tratamento{}
+
+	tratamentos, err := tratamentoModel.FindAll(utils.DB)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Erro ao buscar funcionários"})
+		return
+	}
+
+	// Retorna os funcionários encontrados para o front-end
+	c.JSON(200, gin.H{"data": tratamentos})
+}

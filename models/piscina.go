@@ -11,6 +11,7 @@ import (
 
 type Tratamento struct {
 	ID             primitive.ObjectID `bson:"_id,omitempty"`
+	Type           bool               `bson:"type" json:"type"`
 	NomePiscineiro string             `bson:"nome_piscineiro" json:"nome_piscineiro"`
 	NomeEmpresa    string             `bson:"nome_empresa" json:"nome_empresa"`
 	Cloro          float64            `bson:"cloro" json:"cloro"`
@@ -43,11 +44,31 @@ func (f *Tratamento) InsertTratamento(db *mongo.Database) error {
 		return errors.New("já houve um tratamento no dia de hoje")
 	}
 
-	// Criando o Funcionário.
+	// Criando o tratamento.
 	f.CreatedAt = time.Now()
 	_, err = piscinaCollection.InsertOne(context.TODO(), f)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+// FindAll consulta todos os tratamentos na coleção "piscina".
+func (f *Tratamento) FindAll(db *mongo.Database) ([]Tratamento, error) {
+	var result []Tratamento
+	collection := db.Collection("piscina")
+
+	// Filtro para buscar apenas documentos com "type" igual a true (tratamento).
+	filter := bson.M{"type": true}
+
+	cursor, err := collection.Find(context.Background(), filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.Background())
+	if err = cursor.All(context.Background(), &result); err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
