@@ -10,4 +10,7 @@ func SetRoutes(router *gin.Engine) {
 	// Funcionarios
 	router.POST("/funcionarios/create", controllers.CreateFuncionario)
 	router.GET("/funcionarios", controllers.GetAllFuncionarios)
+
+	// Piscina
+	router.POST("/piscina/create", controllers.CreateTratamento)
 }
