@@ -11,7 +11,7 @@ import (
 
 type Tratamento struct {
 	ID             primitive.ObjectID `bson:"_id,omitempty"`
-	Type           bool               `bson:"type" json:"type"`
+	Type           string             `bson:"type" json:"type"`
 	NomePiscineiro string             `bson:"nome_piscineiro" json:"nome_piscineiro"`
 	NomeEmpresa    string             `bson:"nome_empresa" json:"nome_empresa"`
 	Cloro          float64            `bson:"cloro" json:"cloro"`
@@ -21,32 +21,71 @@ type Tratamento struct {
 	CreatedAt      time.Time          `bson:"created_at" json:"createdAt"`
 }
 
+type Manutencao struct {
+	ID         primitive.ObjectID `bson:"_id,omitempty"`
+	Titulo     string             `bson:"titulo" json:"titulo"`
+	Type       string             `bson:"type" json:"type"`
+	Prioridade string             `bson:"prioridade" json:"prioridade"`
+	Descricao  string             `bson:"descricao" json:"descricao"`
+	CreatedAt  time.Time          `bson:"created_at" json:"createdAt"`
+}
+
 // InsertTratamento insere um tratamento na collection de Piscina.
 func (f *Tratamento) InsertTratamento(db *mongo.Database) error {
 	f.ID = primitive.NewObjectID()
 	piscinaCollection := db.Collection("piscina")
 
-	// Verifica se já existe algum tratamento no dia correspondente.
+	// Verifica se já existe algum tratamento no dia correspondente com type igual a true.
 	startOfDay := time.Date(f.CreatedAt.Year(), f.CreatedAt.Month(), f.CreatedAt.Day(), 0, 0, 0, 0, time.UTC)
 	endOfDay := startOfDay.Add(24 * time.Hour)
 
+	existingTratamento := &Tratamento{}
 	err := piscinaCollection.FindOne(context.TODO(), bson.M{
 		"created_at": bson.M{
 			"$gte": startOfDay,
 			"$lt":  endOfDay,
 		},
-	}).Decode(&Tratamento{})
-	if err != nil && err != mongo.ErrNoDocuments {
-		// criar um arquivo de log, etc.
-		return err
-	}
-	if err == nil {
-		return errors.New("já houve um tratamento no dia de hoje")
+		"type": "Tratamento",
+	}).Decode(existingTratamento)
+	if err != nil {
+		if err != mongo.ErrNoDocuments {
+			// Criar um arquivo de log, etc.
+			return err
+		}
+	} else {
+		return errors.New("já houve um tratamento no dia de hoje com type igual a true")
 	}
 
 	// Criando o tratamento.
 	f.CreatedAt = time.Now()
 	_, err = piscinaCollection.InsertOne(context.TODO(), f)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// InsertManutencao insere uma manutenção na collection de Piscina.
+func (m *Manutencao) InsertManutencao(db *mongo.Database) error {
+	m.ID = primitive.NewObjectID()
+	piscinaCollection := db.Collection("piscina")
+
+	// Verifica se já existe alguma manutenção com o mesmo título e type igual a false.
+	existingManutencao := &Manutencao{}
+	err := piscinaCollection.FindOne(context.TODO(), bson.M{
+		"titulo": m.Titulo,
+		"type":   "Manutenção",
+	}).Decode(existingManutencao)
+	if err != nil {
+		if err != mongo.ErrNoDocuments {
+			// Criar um arquivo de log, etc.
+			return err
+		}
+	} else {
+		return errors.New("já existe uma manutenção com o mesmo título e type igual a false")
+	}
+	m.CreatedAt = time.Now()
+	_, err = piscinaCollection.InsertOne(context.TODO(), m)
 	if err != nil {
 		return err
 	}

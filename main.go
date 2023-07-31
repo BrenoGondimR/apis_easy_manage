@@ -20,6 +20,10 @@ func main() {
 
 	// Configure the database connection
 	configure.ConfigureDB()
+	//TODO REMOVER EM PRODUÇÃO
+
+	// Definir o modo de produção para o Gin Framework
+	gin.SetMode(gin.ReleaseMode)
 
 	// Set up the Gin router
 	server := os.Getenv("SERVER_ADDRESS")
