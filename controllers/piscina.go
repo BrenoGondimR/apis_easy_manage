@@ -52,7 +52,7 @@ func UpdateManutencaoControllers(c *gin.Context) {
 	}
 
 	// Verifique se o ID da manutenção foi fornecido pelo front-end.
-	idStr := c.Param("_id")
+	idStr := c.Param("manutID")
 	if idStr == "" {
 		c.JSON(400, gin.H{"error": "ID da Manutenção não fornecido"})
 		return
