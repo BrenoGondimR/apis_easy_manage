@@ -22,12 +22,15 @@ type Tratamento struct {
 }
 
 type Manutencao struct {
-	ID         primitive.ObjectID `bson:"_id,omitempty"`
-	Titulo     string             `bson:"titulo" json:"titulo"`
-	Type       string             `bson:"type" json:"type"`
-	Prioridade string             `bson:"prioridade" json:"prioridade"`
-	Descricao  string             `bson:"descricao" json:"descricao"`
-	CreatedAt  time.Time          `bson:"created_at" json:"createdAt"`
+	ID             primitive.ObjectID `bson:"_id" json:"_id"`
+	Titulo         string             `bson:"titulo" json:"titulo"`
+	Type           string             `bson:"type" json:"type"`
+	Estado         string             `bson:"estado" json:"estado"`
+	NomePiscineiro string             `bson:"nome_piscineiro" json:"nome_piscineiro"`
+	NomeEmpresa    string             `bson:"nome_empresa" json:"nome_empresa"`
+	Prioridade     string             `bson:"prioridade" json:"prioridade"`
+	Descricao      string             `bson:"descricao" json:"descricao"`
+	CreatedAt      time.Time          `bson:"created_at" json:"createdAt"`
 }
 
 // InsertTratamento insere um tratamento na collection de Piscina.
@@ -65,6 +68,34 @@ func (f *Tratamento) InsertTratamento(db *mongo.Database) error {
 	return nil
 }
 
+// UpdateManutencao atualiza o estado de uma manutenção na collection de Piscina.
+func UpdateManutencao(db *mongo.Database, id primitive.ObjectID, estado string) error {
+	piscinaCollection := db.Collection("piscina")
+
+	// Verifica se a manutenção existe.
+	existingManutencao := &Manutencao{}
+	err := piscinaCollection.FindOne(context.TODO(), bson.M{
+		"_id":  id,
+		"type": "Manutenção",
+	}).Decode(existingManutencao)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return errors.New("manutenção não encontrada")
+		}
+		return err
+	}
+
+	// Atualiza o estado da manutenção.
+	_, err = piscinaCollection.UpdateOne(context.TODO(), bson.M{"_id": id}, bson.M{
+		"$set": bson.M{"estado": estado},
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // InsertManutencao insere uma manutenção na collection de Piscina.
 func (m *Manutencao) InsertManutencao(db *mongo.Database) error {
 	m.ID = primitive.NewObjectID()
@@ -98,7 +129,27 @@ func (f *Tratamento) FindAll(db *mongo.Database) ([]Tratamento, error) {
 	collection := db.Collection("piscina")
 
 	// Filtro para buscar apenas documentos com "type" igual a true (tratamento).
-	filter := bson.M{"type": true}
+	filter := bson.M{"type": "Tratamento"}
+
+	cursor, err := collection.Find(context.Background(), filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.Background())
+	if err = cursor.All(context.Background(), &result); err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+// FindAllManutencao consulta todos os tratamentos na coleção "piscina".
+func (m *Manutencao) FindAllManutencao(db *mongo.Database) ([]Manutencao, error) {
+	var result []Manutencao
+	collection := db.Collection("piscina")
+
+	// Filtro para buscar apenas documentos com "type" igual a (Manutencao).
+	filter := bson.M{"type": "Manutenção"}
 
 	cursor, err := collection.Find(context.Background(), filter)
 	if err != nil {

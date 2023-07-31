@@ -15,4 +15,6 @@ func SetRoutes(router *gin.Engine) {
 	router.POST("/piscina/create", controllers.CreateTratamento)
 	router.GET("/piscina", controllers.GetAllTratamentos)
 	router.POST("/piscina/manutencao/create", controllers.CreateManutencao)
+	router.GET("/piscina/manutencao", controllers.GetAllManutencoes)
+	router.POST("/piscina/estado/update", controllers.UpdateManutencaoControllers)
 }
