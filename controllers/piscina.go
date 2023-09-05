@@ -25,7 +25,7 @@ func CreateTratamento(c *gin.Context) {
 	c.JSON(201, gin.H{"message": "Tratamento criado com sucesso", "tratamento": tratamento})
 }
 
-func CreateManutencao(c *gin.Context) {
+func CreateManutencaoPiscina(c *gin.Context) {
 	manutencao := models.Manutencao{}
 	// BindJSON é utilizado para decodificar o JSON recebido do front-end para a struct funcionario.
 	if err := c.BindJSON(&manutencao); err != nil {
@@ -88,7 +88,7 @@ func GetAllTratamentos(c *gin.Context) {
 	c.JSON(200, gin.H{"data": tratamentos})
 }
 
-func GetAllManutencoes(c *gin.Context) {
+func GetAllManutencoesPiscina(c *gin.Context) {
 	manutencaoModel := models.Manutencao{}
 
 	manutencoes, err := manutencaoModel.FindAllManutencao(utils.DB)
