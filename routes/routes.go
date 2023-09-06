@@ -25,4 +25,10 @@ func SetRoutes(router *gin.Engine) {
 	// Treinamentos
 	router.GET("/treinamentos", controllers.GetAllTreinamentos)
 	router.POST("/treinamentos/create", controllers.CreateTreinamento)
+
+	// Financeiro
+	router.POST("/financeiro/create", controllers.CreateFinanceiro)
+	router.GET("/financeiro/custos", controllers.GetAllCustos)
+	router.GET("/financeiro/ganhos", controllers.GetAllGanhos)
+	router.GET("/financeiro/renda", controllers.GetAllRenda)
 }
