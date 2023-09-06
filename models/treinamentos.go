@@ -17,11 +17,12 @@ type Treinamentos struct {
 	Funcionarios              string             `bson:"funcionarios" json:"funcionarios"`
 	Tipo                      string             `bson:"tipo" json:"tipo"`
 	Observacoes               string             `bson:"observacoes" json:"observacoes"`
+	Status                    string             `bson:"status" json:"status"`
 	CreatedAt                 time.Time          `bson:"created_at" json:"createdAt"`
 }
 
 // CreateTreinamento insere um novo treinamento na coleção de Treinamentos.
-func (t *Treinamentos) CreateTreinamento(db *mongo.Database) (primitive.ObjectID, error) {
+func (t *Treinamentos) CreateTreinamento(db *mongo.Database) primitive.ObjectID {
 	t.ID = primitive.NewObjectID()
 	t.CreatedAt = time.Now()
 
@@ -31,17 +32,34 @@ func (t *Treinamentos) CreateTreinamento(db *mongo.Database) (primitive.ObjectID
 	err := db.Collection("treinamentos").FindOne(context.Background(), filter).Decode(&existingTreinamento)
 	if err == nil {
 		// Já existe um treinamento com o mesmo nome, não crie um novo
-		return existingTreinamento.ID, nil
+		return existingTreinamento.ID
 	} else if err != mongo.ErrNoDocuments {
 		// Ocorreu um erro diferente de "nenhum documento encontrado"
-		return primitive.NilObjectID, err
+		return primitive.NilObjectID
 	}
 
 	// Não existe um treinamento com o mesmo nome, crie um novo
 	_, err = db.Collection("treinamentos").InsertOne(context.Background(), t)
 	if err != nil {
-		return primitive.NilObjectID, err
+		return primitive.NilObjectID
 	}
 
-	return t.ID, nil
+	return t.ID
+}
+
+// FindAll consulta todos os fornecedores na coleção "fornecedores".
+func (t *Treinamentos) FindAll(db *mongo.Database) ([]Treinamentos, error) {
+	var result []Treinamentos
+	collection := db.Collection("treinamentos")
+
+	cursor, err := collection.Find(context.Background(), bson.M{})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.Background())
+	if err = cursor.All(context.Background(), &result); err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }

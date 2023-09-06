@@ -13,10 +13,16 @@ func SetRoutes(router *gin.Engine) {
 
 	// Piscina
 	router.POST("/piscina/create", controllers.CreateTratamento)
-	router.POST("/fornecedores/create", controllers.CreateFornecedor)
 	router.GET("/piscina", controllers.GetAllTratamentos)
-	router.GET("/fornecedores", controllers.GetAllFornecedores)
 	router.POST("/piscina/manutencao/create", controllers.CreateManutencaoPiscina)
 	router.GET("/piscina/manutencao", controllers.GetAllManutencoesPiscina)
 	router.PUT("/piscina/estado/update/:manutID", controllers.UpdateManutencaoControllers)
+
+	// Fornecedores
+	router.GET("/fornecedores", controllers.GetAllFornecedores)
+	router.POST("/fornecedores/create", controllers.CreateFornecedor)
+
+	// Treinamentos
+	router.GET("/treinamentos", controllers.GetAllTreinamentos)
+	router.POST("/treinamentos/create", controllers.CreateTreinamento)
 }
