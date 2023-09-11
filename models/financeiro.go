@@ -12,6 +12,7 @@ type Financeiro struct {
 	ID        primitive.ObjectID `bson:"_id,omitempty"`
 	Ganhos    float64            `bson:"ganhos" json:"ganhos"`
 	Custos    float64            `bson:"custos" json:"custos"`
+	Data      time.Time          `bson:"data" json:"data"`
 	CreatedAt time.Time          `bson:"created_at" json:"createdAt"`
 }
 
