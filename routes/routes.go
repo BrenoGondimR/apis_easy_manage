@@ -33,4 +33,5 @@ func SetRoutes(router *gin.Engine) {
 	router.GET("/financeiro/ganhos", controllers.GetAllGanhos)
 	router.GET("/financeiro/renda", controllers.GetAllRenda)
 	router.GET("/financeiro/todos", controllers.GetAllFinanceiro)
+	router.GET("/financeiro/cgr", controllers.GetTotaisMensais)
 }

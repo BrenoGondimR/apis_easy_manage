@@ -32,6 +32,22 @@ func CreateFinanceiro(c *gin.Context) {
 	c.JSON(201, gin.H{"message": "Dados financeiros criados com sucesso", "financeiro_id": createdID})
 }
 
+func GetTotaisMensais(c *gin.Context) {
+	// Chame a função CalcularTotaisMensais para obter os totais mensais.
+	totais, err := models.CalcularTotaisMensais(utils.DB)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Erro ao calcular totais mensais", "message": err.Error()})
+		return
+	}
+
+	// Retorne apenas os valores dos totais mensais como resposta JSON.
+	c.JSON(http.StatusOK, gin.H{
+		"custos": totais.Custos,
+		"ganhos": totais.Ganhos,
+		"renda":  totais.Renda,
+	})
+}
+
 func GetAllFinanceiro(c *gin.Context) {
 	// Crie uma instância de *Manutencoes (ponteiro para Manutencoes)
 	financeiro := &models.Financeiro{}
