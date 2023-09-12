@@ -65,6 +65,56 @@ func (t *Treinamentos) FindAll(db *mongo.Database) ([]Treinamentos, error) {
 	return result, nil
 }
 
+func GetTreinamentoByID(db *mongo.Database, id primitive.ObjectID) (*Treinamentos, error) {
+	collection := db.Collection("treinamentos")
+
+	// Crie um filtro para encontrar a manutenção com o ID especificado.
+	filter := bson.M{"_id": id}
+
+	// Execute a consulta no banco de dados.
+	var treinamento Treinamentos
+	err := collection.FindOne(context.TODO(), filter).Decode(&treinamento)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, errors.New("treinamento não encontrado")
+		}
+		return nil, err
+	}
+
+	return &treinamento, nil
+}
+
+func UpdateTreinamentoByID(db *mongo.Database, id primitive.ObjectID, updatedTreinamento *Treinamentos) error {
+	collection := db.Collection("treinamentos")
+
+	// Crie um filtro com base no ID fornecido.
+	filter := bson.M{"_id": id}
+
+	// Crie uma atualização para definir os novos valores.
+	update := bson.M{
+		"$set": bson.M{
+			"treinamento":                updatedTreinamento.Treinamento,
+			"carga_horaria":              updatedTreinamento.CargaHoraria,
+			"data_treinamento":           updatedTreinamento.DataTreinamento,
+			"caracteristica_treinamento": updatedTreinamento.CaracteristicaTreinamento,
+			"funcionarios":               updatedTreinamento.Funcionarios,
+			"tipo":                       updatedTreinamento.Tipo,
+			"observacoes":                updatedTreinamento.Observacoes,
+		},
+	}
+
+	// Execute a atualização no banco de dados.
+	_, err := collection.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return errors.New("treinamento não encontrada")
+		}
+		return err
+	}
+
+	return nil
+}
+
 func UpdateTreinamentoStatus(db *mongo.Database, id primitive.ObjectID, status string) error {
 	trenamentoCollection := db.Collection("treinamentos")
 

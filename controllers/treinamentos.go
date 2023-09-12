@@ -27,6 +27,45 @@ func CreateTreinamento(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "Treinamento criado com sucesso", "treinamento_id": treinamentoID.Hex()})
 }
 
+func GetTreinamentoByIDAndPopulateForm(c *gin.Context) {
+	// Obtenha o ID da manutenção da URL.
+	idStr := c.Param("manutID")
+	if idStr == "" {
+		c.JSON(400, gin.H{"error": "ID do treinamento não fornecido"})
+		return
+	}
+
+	// Converta o ID da string para um tipo ObjectID.
+	id, err := primitive.ObjectIDFromHex(idStr)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "ID do treinamento inválido"})
+		return
+	}
+
+	// Utilize a função GetManutencaoByID da model para buscar a manutenção pelo ID.
+	treinamento, err := models.GetTreinamentoByID(utils.DB, id)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Erro ao buscar treinamento", "message": err.Error()})
+		return
+	}
+
+	// Preencha os valores do formulário com base nos dados da manutenção.
+	form := &models.Treinamentos{
+		ID:                        treinamento.ID,
+		Treinamento:               treinamento.Treinamento,
+		CargaHoraria:              treinamento.CargaHoraria,
+		DataTreinamento:           treinamento.DataTreinamento,
+		CaracteristicaTreinamento: treinamento.CaracteristicaTreinamento,
+		Funcionarios:              treinamento.Funcionarios,
+		Tipo:                      treinamento.Tipo,
+		Observacoes:               treinamento.Observacoes,
+		Status:                    treinamento.Status,
+	}
+
+	// Retorne os dados do formulário preenchidos como resposta JSON.
+	c.JSON(200, gin.H{"data": form})
+}
+
 func GetAllTreinamentos(c *gin.Context) {
 	treinamentosModels := models.Treinamentos{}
 
@@ -38,6 +77,38 @@ func GetAllTreinamentos(c *gin.Context) {
 
 	// Retorna os funcionários encontrados para o front-end
 	c.JSON(200, gin.H{"data": tratamentos})
+}
+
+func UpdateTreinamentoByID(c *gin.Context) {
+	// Obtenha o ID da manutenção da URL.
+	idStr := c.Param("manutID")
+	if idStr == "" {
+		c.JSON(400, gin.H{"error": "ID da treinamento não fornecido"})
+		return
+	}
+
+	// Converta o ID da string para um tipo ObjectID.
+	id, err := primitive.ObjectIDFromHex(idStr)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "ID da treinamento inválido"})
+		return
+	}
+
+	// Obtenha os dados da atualização da manutenção do corpo da solicitação.
+	var updatedTreinamento models.Treinamentos
+	if err := c.BindJSON(&updatedTreinamento); err != nil {
+		c.JSON(400, gin.H{"error": "Erro ao ler informações da treinamento"})
+		return
+	}
+
+	// Utilize a função UpdateManutencaoByID da model para atualizar a manutenção no banco de dados.
+	if err := models.UpdateTreinamentoByID(utils.DB, id, &updatedTreinamento); err != nil {
+		c.JSON(500, gin.H{"error": "Erro ao atualizar treinamento", "message": err.Error()})
+		return
+	}
+
+	// Retorne uma resposta de sucesso ao front-end.
+	c.JSON(200, gin.H{"message": "Treinamento atualizado com sucesso"})
 }
 
 func UpdateTreinamentosStatus(c *gin.Context) {

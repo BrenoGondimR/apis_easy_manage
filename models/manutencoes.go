@@ -33,6 +33,56 @@ func (m *Manutencoes) CreateManutencao(db *mongo.Database) (primitive.ObjectID, 
 	return m.ID, nil
 }
 
+func GetManutencaoByID(db *mongo.Database, id primitive.ObjectID) (*Manutencoes, error) {
+	collection := db.Collection("manutencoes")
+
+	// Crie um filtro para encontrar a manutenção com o ID especificado.
+	filter := bson.M{"_id": id}
+
+	// Execute a consulta no banco de dados.
+	var manutencao Manutencoes
+	err := collection.FindOne(context.TODO(), filter).Decode(&manutencao)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, errors.New("manutenção não encontrada")
+		}
+		return nil, err
+	}
+
+	return &manutencao, nil
+}
+
+func UpdateManutencaoByID(db *mongo.Database, id primitive.ObjectID, updatedManutencao *Manutencoes) error {
+	collection := db.Collection("manutencoes")
+
+	// Crie um filtro com base no ID fornecido.
+	filter := bson.M{"_id": id}
+
+	// Crie uma atualização para definir os novos valores.
+	update := bson.M{
+		"$set": bson.M{
+			"local":           updatedManutencao.Local,
+			"tipo":            updatedManutencao.Tipo,
+			"data_ocorrencia": updatedManutencao.DataOcorrencia,
+			"data_resolucao":  updatedManutencao.DataResolucao,
+			"servico":         updatedManutencao.Servico,
+			"descricao":       updatedManutencao.Descricao,
+			"status":          updatedManutencao.Status,
+		},
+	}
+
+	// Execute a atualização no banco de dados.
+	_, err := collection.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return errors.New("manutenção não encontrada")
+		}
+		return err
+	}
+
+	return nil
+}
+
 // FindAll consulta todas as manutenções na coleção "manutencoes".
 func (m *Manutencoes) FindAll(db *mongo.Database) ([]Manutencoes, error) {
 	var result []Manutencoes
