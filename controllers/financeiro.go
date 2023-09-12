@@ -32,6 +32,21 @@ func CreateFinanceiro(c *gin.Context) {
 	c.JSON(201, gin.H{"message": "Dados financeiros criados com sucesso", "financeiro_id": createdID})
 }
 
+func GetAllFinanceiro(c *gin.Context) {
+	// Crie uma instância de *Manutencoes (ponteiro para Manutencoes)
+	financeiro := &models.Financeiro{}
+
+	// Invoque a função FindAll para buscar todas as manutenções no banco de dados.
+	financeiroList, err := financeiro.FindAll(utils.DB)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Erro ao buscar Financeiro", "message": err.Error()})
+		return
+	}
+
+	// Retorne a lista de manutenções encontradas como resposta JSON.
+	c.JSON(200, gin.H{"data": financeiroList})
+}
+
 func GetAllCustos(c *gin.Context) {
 	// Chame a função GetAllCustos para buscar todos os custos e calcular a soma.
 	totalCustos, err := models.GetAllCustos(utils.DB)

@@ -9,11 +9,14 @@ import (
 )
 
 type Financeiro struct {
-	ID        primitive.ObjectID `bson:"_id,omitempty"`
-	Ganhos    float64            `bson:"ganhos" json:"ganhos"`
-	Custos    float64            `bson:"custos" json:"custos"`
-	Data      time.Time          `bson:"data" json:"data"`
-	CreatedAt time.Time          `bson:"created_at" json:"createdAt"`
+	ID            primitive.ObjectID `bson:"_id,omitempty"`
+	Ganhos        float64            `bson:"ganhos" json:"ganhos"`
+	Origem        string             `bson:"origem" json:"origem"`
+	TipoTransacao string             `bson:"tipo_transacao" json:"tipo_transacao"`
+	Custos        float64            `bson:"custos" json:"custos"`
+	Status        string             `bson:"status" json:"status"`
+	Data          time.Time          `bson:"data" json:"data"`
+	CreatedAt     time.Time          `bson:"created_at" json:"createdAt"`
 }
 
 // CreateFinanceiro Insert.
@@ -59,6 +62,23 @@ func GetAllCustos(db *mongo.Database) (float64, error) {
 	}
 
 	return 0, nil // Retorna 0 se não houver custos no banco de dados.
+}
+
+// FindAll consulta todas as manutenções na coleção "manutencoes".
+func (m *Financeiro) FindAll(db *mongo.Database) ([]Financeiro, error) {
+	var result []Financeiro
+	collection := db.Collection("financeiro")
+
+	cursor, err := collection.Find(context.Background(), bson.M{})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.Background())
+	if err = cursor.All(context.Background(), &result); err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 // GetAllGanhos busca todos os registros de ganhos no banco de dados e calcula a soma.

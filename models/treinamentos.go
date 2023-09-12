@@ -2,6 +2,7 @@ package models
 
 import (
 	"context"
+	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -9,7 +10,7 @@ import (
 )
 
 type Treinamentos struct {
-	ID                        primitive.ObjectID `bson:"_id,omitempty"`
+	ID                        primitive.ObjectID `bson:"_id" json:"_id"`
 	Treinamento               string             `bson:"treinamento" json:"treinamento"`
 	CargaHoraria              string             `bson:"carga_horaria" json:"carga_horaria"`
 	DataTreinamento           time.Time          `bson:"data_treinamento" json:"data_treinamento"`
@@ -62,4 +63,32 @@ func (t *Treinamentos) FindAll(db *mongo.Database) ([]Treinamentos, error) {
 	}
 
 	return result, nil
+}
+
+func UpdateTreinamentoStatus(db *mongo.Database, id primitive.ObjectID, status string) error {
+	trenamentoCollection := db.Collection("treinamentos")
+
+	// Verifica se a manutenção existe.
+	existingManutencao := &Manutencoes{}
+	err := trenamentoCollection.FindOne(context.TODO(), bson.M{
+		"_id": id,
+	}).Decode(existingManutencao)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return errors.New("manutenção não encontrada")
+		}
+		return err
+	}
+
+	// Atualiza o estado da manutenção e a data de resolução.
+	_, err = trenamentoCollection.UpdateOne(context.TODO(), bson.M{"_id": id}, bson.M{
+		"$set": bson.M{
+			"status": status,
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
