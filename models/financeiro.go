@@ -2,6 +2,7 @@ package models
 
 import (
 	"context"
+	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -9,7 +10,7 @@ import (
 )
 
 type Financeiro struct {
-	ID            primitive.ObjectID `bson:"_id,omitempty"`
+	ID            primitive.ObjectID `bson:"_id" json:"_id"`
 	Ganhos        float64            `bson:"ganhos" json:"ganhos"`
 	Origem        string             `bson:"origem" json:"origem"`
 	TipoTransacao string             `bson:"tipo_transacao" json:"tipo_transacao"`
@@ -36,6 +37,55 @@ func (m *Financeiro) CreateFinanceiro(db *mongo.Database) (primitive.ObjectID, e
 	}
 
 	return m.ID, nil
+}
+
+func GetFinanceiroByID(db *mongo.Database, id primitive.ObjectID) (*Financeiro, error) {
+	collection := db.Collection("financeiro")
+
+	// Crie um filtro para encontrar a manutenção com o ID especificado.
+	filter := bson.M{"_id": id}
+
+	// Execute a consulta no banco de dados.
+	var finaneiro Financeiro
+	err := collection.FindOne(context.TODO(), filter).Decode(&finaneiro)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, errors.New("financeiro não encontrada")
+		}
+		return nil, err
+	}
+
+	return &finaneiro, nil
+}
+
+func UpdateFinanceiroByID(db *mongo.Database, id primitive.ObjectID, updatedTreinamento *Financeiro) error {
+	collection := db.Collection("financeiro")
+
+	// Crie um filtro com base no ID fornecido.
+	filter := bson.M{"_id": id}
+
+	// Crie uma atualização para definir os novos valores.
+	update := bson.M{
+		"$set": bson.M{
+			"origem":         updatedTreinamento.Origem,
+			"ganhos":         updatedTreinamento.Ganhos,
+			"custos":         updatedTreinamento.Custos,
+			"data":           updatedTreinamento.Data,
+			"tipo_transacao": updatedTreinamento.TipoTransacao,
+			"status":         updatedTreinamento.Status,
+		},
+	}
+
+	// Execute a atualização no banco de dados.
+	_, err := collection.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return errors.New("financeiro não encontrada")
+		}
+		return err
+	}
+
+	return nil
 }
 
 // CalcularTotaisMensais calcula os totais mensais de custos, ganhos e renda.

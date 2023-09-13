@@ -41,4 +41,7 @@ func SetRoutes(router *gin.Engine) {
 	router.GET("/financeiro/renda", controllers.GetAllRenda)
 	router.GET("/financeiro/todos", controllers.GetAllFinanceiro)
 	router.GET("/financeiro/cgr", controllers.GetTotaisMensais)
+	router.GET("/financeiro/edit/get/:manutID", controllers.GetFinanceiroByIDAndPopulateForm)
+	router.PUT("/financeiro/edit/update/:manutID", controllers.UpdateFinanceiroByID)
+
 }

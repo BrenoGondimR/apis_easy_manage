@@ -4,6 +4,7 @@ import (
 	"example/web-service-gin/models"
 	"example/web-service-gin/utils"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
 )
 
@@ -30,6 +31,75 @@ func CreateFinanceiro(c *gin.Context) {
 
 	// Os dados financeiros foram criados com sucesso. Você pode retornar uma resposta de sucesso ao frontend.
 	c.JSON(201, gin.H{"message": "Dados financeiros criados com sucesso", "financeiro_id": createdID})
+}
+
+func GetFinanceiroByIDAndPopulateForm(c *gin.Context) {
+	// Obtenha o ID da manutenção da URL.
+	idStr := c.Param("manutID")
+	if idStr == "" {
+		c.JSON(400, gin.H{"error": "ID da financeiro não fornecido"})
+		return
+	}
+
+	// Converta o ID da string para um tipo ObjectID.
+	id, err := primitive.ObjectIDFromHex(idStr)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "ID da financeiro inválido"})
+		return
+	}
+
+	// Utilize a função GetManutencaoByID da model para buscar a manutenção pelo ID.
+	financeiro, err := models.GetFinanceiroByID(utils.DB, id)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Erro ao buscar financeiro", "message": err.Error()})
+		return
+	}
+
+	// Preencha os valores do formulário com base nos dados da financeiro.
+	form := &models.Financeiro{
+		ID:            financeiro.ID,
+		Origem:        financeiro.Origem,
+		Ganhos:        financeiro.Ganhos,
+		TipoTransacao: financeiro.TipoTransacao,
+		Custos:        financeiro.Custos,
+		Status:        financeiro.Status,
+		Data:          financeiro.Data,
+	}
+
+	// Retorne os dados do formulário preenchidos como resposta JSON.
+	c.JSON(200, gin.H{"data": form})
+}
+
+func UpdateFinanceiroByID(c *gin.Context) {
+	// Obtenha o ID da manutenção da URL.
+	idStr := c.Param("manutID")
+	if idStr == "" {
+		c.JSON(400, gin.H{"error": "ID da financeiro não fornecido"})
+		return
+	}
+
+	// Converta o ID da string para um tipo ObjectID.
+	id, err := primitive.ObjectIDFromHex(idStr)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "ID da financeiro inválido"})
+		return
+	}
+
+	// Obtenha os dados da atualização da manutenção do corpo da solicitação.
+	var updatedFinanceiro models.Financeiro
+	if err := c.BindJSON(&updatedFinanceiro); err != nil {
+		c.JSON(400, gin.H{"error": "Erro ao ler informações da financeiro"})
+		return
+	}
+
+	// Utilize a função UpdateManutencaoByID da model para atualizar a manutenção no banco de dados.
+	if err := models.UpdateFinanceiroByID(utils.DB, id, &updatedFinanceiro); err != nil {
+		c.JSON(500, gin.H{"error": "Erro ao atualizar financeiro", "message": err.Error()})
+		return
+	}
+
+	// Retorne uma resposta de sucesso ao front-end.
+	c.JSON(200, gin.H{"message": "financeiro atualizado com sucesso"})
 }
 
 func GetTotaisMensais(c *gin.Context) {
