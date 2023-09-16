@@ -75,12 +75,83 @@ func UpdateManutencaoControllers(c *gin.Context) {
 	c.JSON(200, gin.H{"message": "Estado da Manutenção atualizado com sucesso"})
 }
 
+func UpdatePiscinaByID(c *gin.Context) {
+	// Obtenha o ID da manutenção da URL.
+	idStr := c.Param("manutID")
+	if idStr == "" {
+		c.JSON(400, gin.H{"error": "ID da tratamento não fornecido"})
+		return
+	}
+
+	// Converta o ID da string para um tipo ObjectID.
+	id, err := primitive.ObjectIDFromHex(idStr)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "ID da tratamento inválido"})
+		return
+	}
+
+	// Obtenha os dados da atualização da manutenção do corpo da solicitação.
+	var updatedTratamento models.Tratamento
+	if err := c.BindJSON(&updatedTratamento); err != nil {
+		c.JSON(400, gin.H{"error": "Erro ao ler informações da tratamento"})
+		return
+	}
+
+	// Utilize a função UpdateManutencaoByID da model para atualizar a manutenção no banco de dados.
+	if err := models.UpdateTratamentoByID(utils.DB, id, &updatedTratamento); err != nil {
+		c.JSON(500, gin.H{"error": "Erro ao atualizar tratamento", "message": err.Error()})
+		return
+	}
+
+	// Retorne uma resposta de sucesso ao front-end.
+	c.JSON(200, gin.H{"message": "tratamento atualizada com sucesso"})
+}
+
+func GetTratamentoByIDAndPopulateForm(c *gin.Context) {
+	// Obtenha o ID da manutenção da URL.
+	idStr := c.Param("manutID")
+	if idStr == "" {
+		c.JSON(400, gin.H{"error": "ID da tratamento não fornecido"})
+		return
+	}
+
+	// Converta o ID da string para um tipo ObjectID.
+	id, err := primitive.ObjectIDFromHex(idStr)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "ID da tratamento inválido"})
+		return
+	}
+
+	// Utilize a função GetManutencaoByID da model para buscar a manutenção pelo ID.
+	tratamento, err := models.GetTratamentoByID(utils.DB, id)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Erro ao buscar tratamento", "message": err.Error()})
+		return
+	}
+
+	// Preencha os valores do formulário com base nos dados da manutenção.
+	form := &models.Tratamento{
+		ID:             tratamento.ID,
+		NomePiscineiro: tratamento.NomePiscineiro,
+		NomeEmpresa:    tratamento.NomeEmpresa,
+		Data:           tratamento.Data,
+		Pha:            tratamento.Pha,
+		Cloro:          tratamento.Cloro,
+		Acidez:         tratamento.Acidez,
+		Alcalinidade:   tratamento.Alcalinidade,
+		Type:           tratamento.Type,
+	}
+
+	// Retorne os dados do formulário preenchidos como resposta JSON.
+	c.JSON(200, gin.H{"data": form})
+}
+
 func GetAllTratamentos(c *gin.Context) {
 	tratamentoModel := models.Tratamento{}
 
 	tratamentos, err := tratamentoModel.FindAll(utils.DB)
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Erro ao buscar funcionários"})
+		c.JSON(500, gin.H{"error": "Erro ao buscar tratamento"})
 		return
 	}
 

@@ -10,7 +10,7 @@ import (
 )
 
 type Tratamento struct {
-	ID             primitive.ObjectID `bson:"_id,omitempty"`
+	ID             primitive.ObjectID `bson:"_id" json:"_id"`
 	Type           string             `bson:"type" json:"type"`
 	NomePiscineiro string             `bson:"nome_piscineiro" json:"nome_piscineiro"`
 	NomeEmpresa    string             `bson:"nome_empresa" json:"nome_empresa"`
@@ -18,6 +18,7 @@ type Tratamento struct {
 	Pha            float64            `bson:"pha" json:"pha"`
 	Alcalinidade   float64            `bson:"alcalinidade" json:"alcalinidade"`
 	Acidez         float64            `bson:"acidez" json:"acidez"`
+	Data           time.Time          `bson:"data" json:"data"`
 	CreatedAt      time.Time          `bson:"created_at" json:"createdAt"`
 }
 
@@ -65,6 +66,57 @@ func (f *Tratamento) InsertTratamento(db *mongo.Database) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func GetTratamentoByID(db *mongo.Database, id primitive.ObjectID) (*Tratamento, error) {
+	collection := db.Collection("piscina")
+
+	// Crie um filtro para encontrar a manutenção com o ID especificado.
+	filter := bson.M{"_id": id}
+
+	// Execute a consulta no banco de dados.
+	var tratamento Tratamento
+	err := collection.FindOne(context.TODO(), filter).Decode(&tratamento)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, errors.New("manutenção não encontrada")
+		}
+		return nil, err
+	}
+
+	return &tratamento, nil
+}
+
+func UpdateTratamentoByID(db *mongo.Database, id primitive.ObjectID, updatedTratamento *Tratamento) error {
+	collection := db.Collection("piscina")
+
+	// Crie um filtro com base no ID fornecido.
+	filter := bson.M{"_id": id}
+
+	// Crie uma atualização para definir os novos valores.
+	update := bson.M{
+		"$set": bson.M{
+			"nome_piscineiro": updatedTratamento.NomePiscineiro,
+			"type":            updatedTratamento.Type,
+			"nome_empresa":    updatedTratamento.NomeEmpresa,
+			"cloro":           updatedTratamento.Cloro,
+			"pha":             updatedTratamento.Pha,
+			"alcalinidade":    updatedTratamento.Alcalinidade,
+			"acidez":          updatedTratamento.Acidez,
+			"data":            updatedTratamento.Data,
+		},
+	}
+
+	// Execute a atualização no banco de dados.
+	_, err := collection.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return errors.New("tratamento não encontrado")
+		}
+		return err
+	}
+
 	return nil
 }
 
